@@ -1,0 +1,80 @@
+# Versión del formato de Docker Compose
+#
+# ✔ indica qué sintaxis estás usando
+# ✔ 3.8 es estándar y estable
+version: '3.8'
+
+# Aquí definimos todos los contenedores que queremos ejecutar
+services:
+
+  # Contenedor para PostgreSQL, que es una base de datos relacional
+  postgres:
+    image: postgres:18 # Usa la imagen oficial de PostgreSQL versión 18 desde Docker Hub
+    #command: postgres -p 5435 # Configura PostgreSQL para escuchar en el puerto 5435 dentro del contenedor
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER} # Usuario para acceder a la base de datos
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD} # Contraseña para el usuario de la base de datos
+    ports:
+      - "5433:5432" # Formato [HOST:CONTENEDOR]: Mapea el puerto 5432 del contenedor al puerto 5433 de tu máquina local. Esto permite que puedas acceder a PostgreSQL desde tu máquina local usando el puerto 5433.
+    volumes:
+      - postgres_data:/var/lib/postgresql # Monta un volumen para persistir los datos de PostgreSQL, asegurando que no se pierdan cuando el contenedor se detenga o elimine
+    networks:
+      - zanshin-net # Conecta el contenedor de PostgreSQL a la red personalizada zanshin-net, lo que permite la comunicación entre los contenedores que están en esta red
+
+  # Contenedor para Redis, que es una base de datos en memoria
+  redis:
+    image: redis # Usa la imagen oficial de Redis desde Docker Hub
+    container_name: redis # Nombre del contenedor para facilitar su identificación
+    #ports:
+    #  - "6380:6379" # Formato [HOST:CONTENEDOR]: Mapea el puerto 6379 del contenedor al puerto 6379 de tu máquina local.
+    networks:
+      - zanshin-net # Conecta el contenedor de Redis a la red personalizada zanshin-net, lo que permite la comunicación entre los contenedores que están en esta red
+
+  gateway:
+    build: ./gateway # Construye la imagen del gateway a partir del Dockerfile ubicado en ./gateway
+    ports:
+      - "8080:8080" # Mapea el puerto 8080 del contenedor al puerto 8080 de tu máquina local
+    depends_on: # Indica que el gateway depende de Redis, por lo que Docker Compose se asegurará de iniciar Redis antes de iniciar el gateway
+      - redis
+    environment:
+      SPRING_REDIS_HOST: ${SPRING_REDIS_HOST} # Variable de entorno para el host de Redis, que será utilizada por la aplicación Spring Boot
+      SPRING_REDIS_PORT: ${SPRING_REDIS_PORT} # Variable de entorno para el puerto de Redis, que será utilizada por la aplicación Spring Boot
+      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx192m"
+      JWT_SECRET: ${JWT_SECRET}
+    networks:
+      - zanshin-net # Conecta el contenedor del gateway a la red personalizada zanshin-net, lo que permite la comunicación entre los contenedores que están en esta red
+
+  auth-service:
+    build: ./auth-service
+    depends_on:
+      - redis
+      - postgres
+    environment:
+      - SPRING_REDIS_HOST=${SPRING_REDIS_HOST}
+      - SPRING_REDIS_PORT=${SPRING_REDIS_PORT}
+      - JWT_SECRET=${JWT_SECRET}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD} # Establece la variable de entorno DB_PASSWORD para el auth-service, que se utilizará para conectarse a la base de datos PostgreSQL
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx192m
+    networks:
+      - zanshin-net # Conecta el contenedor del auth-service a la red personalizada zanshin-net, lo que permite la comunicación entre los contenedores que están en esta red
+
+  user-service:
+    build: ./user-service
+    depends_on:
+      - redis
+      - postgres
+    environment:
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD} # Establece la variable de entorno DB_PASSWORD para el user-service, que se utilizará para conectarse a la base de datos PostgreSQL
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx192m
+    networks:
+      - zanshin-net # Conecta el contenedor del user-service a la red personalizada zanshin-net, lo que permite la comunicación entre los contenedores que están en esta red
+
+
+volumes:
+  postgres_data: # Define un volumen llamado postgres_data para almacenar los datos de PostgreSQL de forma persistente. Este volumen se montará en el contenedor de PostgreSQL, asegurando que los datos no se pierdan incluso si el contenedor se detiene o elimina.
+
+networks:
+  zanshin-net: # Define una red personalizada llamada zanshin-net para permitir la comunicación entre los contenedores. Todos los contenedores que estén conectados a esta red podrán comunicarse entre sí utilizando sus nombres de servicio como hostnames.

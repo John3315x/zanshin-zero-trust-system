@@ -1,0 +1,16 @@
+1: Token version (recomendado intermedio) 🚩
+Para evitar que una vez se haga un refreshToken siga siendo valido el jwt.
+
+2: Detectar cambios sospechosos
+
+Ejemplo:
+
+login desde Costa Rica → 1 min después login desde Alemania, si no es el mismo usuario, se puede bloquear la cuenta o
+pedir un paso adicional de verificación.
+
+Flujo
+access token incluye tokenVersion
+si haces logout/refresh crítico → incrementas versión
+tokens viejos quedan inválidos
+
+3: Se pueden mejorar los logs pasando nuevo parametro de causa.

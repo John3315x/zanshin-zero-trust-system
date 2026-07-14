@@ -1,0 +1,78 @@
+# ===============================
+# 🧠 JAVA / MAVEN
+# ===============================
+target/
+*.log
+*.class
+*.jar
+*.war
+*.ear
+
+# Maven wrapper
+.mvn/wrapper/maven-wrapper.jar
+
+# ===============================
+# 🧠 SPRING BOOT
+# ===============================
+application.properties
+application.yml
+application-*.properties
+application-*.yml
+
+# (opcional si quieres subir configs base, elimina estas líneas)
+
+# ===============================
+# 🧠 INTELLIJ IDEA
+# ===============================
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# ===============================
+# 🧠 VS CODE
+# ===============================
+.vscode/
+
+# ===============================
+# 🧠 OS
+# ===============================
+.DS_Store
+Thumbs.db
+
+# ===============================
+# 🧠 DOCKER
+# ===============================
+docker-compose.override.yml
+
+# Volúmenes locales (por si los creas)
+postgres_data/
+redis_data/
+
+# ===============================
+# 🧠 ENV VARIABLES
+# ===============================
+.env
+
+# ===============================
+# 🧠 LOGS
+# ===============================
+logs/
+*.out
+
+# ===============================
+# 🧠 TEST OUTPUT
+# ===============================
+surefire-reports/
+failsafe-reports/
+
+# ===============================
+# 🧠 NODE (por si usas frontend luego)
+# ===============================
+node_modules/
+
+# ===============================
+# 🧠 ARCHIVOS TEMPORALES
+# ===============================
+*.tmp
+*.swp
